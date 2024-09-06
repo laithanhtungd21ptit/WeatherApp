@@ -2,7 +2,8 @@ package com.example.weatherapp.fragments.home
 
 import android.app.AlertDialog
 import android.content.pm.PackageManager
-import android.icu.text.SimpleDateFormat
+//import android.icu.text.SimpleDateFormat
+import android.location.Geocoder
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,12 +15,23 @@ import androidx.fragment.app.Fragment
 //import com.example.weatherapp.Manifest
 import com.example.weatherapp.data.CurrentLocation
 import com.example.weatherapp.databinding.FragmentHomeBinding
-//import java.sql.Date
+import com.google.android.gms.location.LocationServices
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.Locale
+
+//import java.sql.Date
+//import java.util.Locale
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = requireNotNull(_binding)
+
+    private val homeViewModel: HomeViewModel by viewModel()
+    private val fusedLocationProviderClient by lazy {
+        LocationServices.getFusedLocationProviderClient(requireContext())
+    }
+    private val geocoder by lazy { Geocoder(requireContext(), Locale("vi")) }
+
 
     private val weatherDataAdapter = WeatherDataAdapter(
         onLocationClicked = {showLocationOptions() }
@@ -38,6 +50,7 @@ class HomeFragment : Fragment() {
     }
 
 
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -51,19 +64,44 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setWeatherDataAdapter()
         setWeatherData()
+        setObservers()
     }
+
+    private fun setObservers(){
+        with(homeViewModel){
+            currentLocation.observe(viewLifecycleOwner){
+                val currentLocationDataState = it ?: return@observe
+                if(currentLocationDataState.isLoading){
+                    showLoading()
+                }
+                currentLocationDataState.currentLocation?.let { currentLocation ->
+                    hideLoading()
+                    if (currentLocation.latitude != null && currentLocation.longitude != null) {
+                        setWeatherData(currentLocation)
+                    } else {
+                        Toast.makeText(requireContext(), "Không tìm thấy vị trí", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                currentLocationDataState.error?.let { error ->
+                    hideLoading()
+                    Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
 
     private fun setWeatherDataAdapter(){
         binding.weatherDataRecyclerView.adapter = weatherDataAdapter
     }
 
-    private fun setWeatherData(){
-        weatherDataAdapter.setData(data = listOf(CurrentLocation()))
+    private fun setWeatherData(currentLocation: CurrentLocation? = null){
+        weatherDataAdapter.setData(data = listOf(currentLocation ?: CurrentLocation()))
     }
 
 
     private fun getCurrentLocation() {
-        Toast.makeText(requireContext(), "getCurrentLocation()", Toast.LENGTH_SHORT).show()
+        homeViewModel.getCurrentLocation(fusedLocationProviderClient, geocoder)
     }
 
     private fun isLocationPermissionGranted() : Boolean{
@@ -82,6 +120,7 @@ class HomeFragment : Fragment() {
             requestLocationPermission()
         }
     }
+
     private fun showLocationOptions(){
         val options = arrayOf("Current Location", "Search Manually")
         AlertDialog.Builder(requireContext()).apply {
@@ -96,4 +135,17 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun showLoading(){
+        with(binding){
+            weatherDataRecyclerView.visibility = View.GONE
+            swipeRefreshLayout.isRefreshing = true
+        }
+    }
+
+    private fun hideLoading(){
+        with(binding){
+            weatherDataRecyclerView.visibility = View.VISIBLE
+            swipeRefreshLayout.isRefreshing = false
+        }
+    }
 }

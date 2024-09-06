@@ -74,4 +74,7 @@ dependencies {
 
     //location
     implementation(libs.play.services.location)
+
+    //Swipe  Refresh Layout
+    implementation(libs.swipe.refresh.layout)
 }
