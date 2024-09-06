@@ -15,12 +15,13 @@ import androidx.fragment.app.Fragment
 //import com.example.weatherapp.Manifest
 import com.example.weatherapp.data.CurrentLocation
 import com.example.weatherapp.databinding.FragmentHomeBinding
+import com.example.weatherapp.storage.SharedPreferencesManager
 import com.google.android.gms.location.LocationServices
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.Locale
 
 //import java.sql.Date
-//import java.util.Locale
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
@@ -37,6 +38,8 @@ class HomeFragment : Fragment() {
         onLocationClicked = {showLocationOptions() }
 
     )
+
+    private val sharedPreferencesManager: SharedPreferencesManager by inject()
 
     private val locationPermissionLaucher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -63,7 +66,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setWeatherDataAdapter()
-        setWeatherData()
+        setWeatherData(currentLocation = sharedPreferencesManager.getCurrentLocation())
         setObservers()
     }
 
@@ -76,7 +79,9 @@ class HomeFragment : Fragment() {
                 }
                 currentLocationDataState.currentLocation?.let { currentLocation ->
                     hideLoading()
+
                     if (currentLocation.latitude != null && currentLocation.longitude != null) {
+                        sharedPreferencesManager.saveCurrentLocation(currentLocation)
                         setWeatherData(currentLocation)
                     } else {
                         Toast.makeText(requireContext(), "Không tìm thấy vị trí", Toast.LENGTH_SHORT).show()
