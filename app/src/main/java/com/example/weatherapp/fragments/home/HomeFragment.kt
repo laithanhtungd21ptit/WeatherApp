@@ -84,7 +84,7 @@ class HomeFragment : Fragment() {
     private fun setObservers(){
         with(homeViewModel){
             currentLocation.observe(viewLifecycleOwner){
-                val currentLocationDataState = it ?: return@observe
+                val currentLocationDataState = it.getContentIfNotHandled() ?: return@observe
                 if(currentLocationDataState.isLoading){
                     showLoading()
                 }
@@ -166,7 +166,7 @@ class HomeFragment : Fragment() {
         }
     }
     private fun startManualLocationSearch(){
-
+     startListeningManualLocationSelection()
         findNavController().navigate(R.id.action_home_fragment_to_location_fragment)
     }
 
