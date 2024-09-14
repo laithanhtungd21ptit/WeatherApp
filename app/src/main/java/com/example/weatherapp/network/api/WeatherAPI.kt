@@ -1,13 +1,13 @@
 package com.example.weatherapp.network.api
 
 import com.example.weatherapp.data.RemoteLocation
-import okhttp3.Response
+
 import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface WeatherAPI {
     companion object{
-        const val BASE_URL="https://api.weatherapi.com/v1"
+        const val BASE_URL="https://api.weatherapi.com/v1/"
         const val API_KEY="e0384f7f780d49cd870173249240909"
 
     }

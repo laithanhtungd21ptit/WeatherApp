@@ -8,6 +8,8 @@ import com.example.weatherapp.network.api.WeatherAPI
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import retrofit2.http.Query
 
 class WeatherDataRepository(private val weatherAPI: WeatherAPI) {
@@ -49,10 +51,14 @@ class WeatherDataRepository(private val weatherAPI: WeatherAPI) {
         } ?: currentLocation
     }
     suspend fun searchLocation(query: String): List<RemoteLocation>? {
-        val response = weatherAPI.searchLocation(query = query)
-        return if(response.isSuccessful) {
-            response.body()
-        } else null
+        return withContext(Dispatchers.IO) {
+            try {
+                weatherAPI.searchLocation(query = query)
+            } catch (e: Exception) {
+                // Xử lý ngoại lệ (ghi log, v.v.)
+                null
+            }
+        }
     }
 
 }
