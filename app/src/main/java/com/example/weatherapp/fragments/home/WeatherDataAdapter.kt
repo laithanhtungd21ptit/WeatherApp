@@ -138,7 +138,7 @@ class WeatherDataAdapter(
                 textTime.text = forecast.time
                 textTemperature.text=String.format("%s\u00B0C", forecast.temperature)
                 textFeelsLikeTemperature.text=String.format("%s\u00B0C", forecast.feelsLikeTemperature)
-                imageIcon.load("https${forecast.icon}"){crossfade(true)}
+                imageIcon.load("https:${forecast.icon}"){crossfade(true)}
             }
         }
     }
